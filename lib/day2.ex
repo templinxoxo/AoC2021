@@ -10,7 +10,7 @@ defmodule Day2 do
         |> Enum.map(fn {_, value} -> value end)
         |> Enum.sum())
     )
-    |> Enum.reduce(1, fn value, acc -> acc * value end)
+    |> Helpers.multiply()
   end
 
   def translate_position({"up", value}), do: {"down", -value}
@@ -29,7 +29,7 @@ defmodule Day2 do
         |> Enum.map(fn {_, value} -> value end)
         |> Enum.sum())
     )
-    |> Enum.reduce(1, fn value, acc -> acc * value end)
+    |> Helpers.multiply()
   end
 
   def add_aim_to_entry({movement, value} = entry, entries) do
