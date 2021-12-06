@@ -2,17 +2,11 @@ defmodule Day3 do
   def part1(data \\ nil) do
     data
     |> get_data()
-    |> transpose()
+    |> Helpers.transpose()
     |> Enum.map(&sort_bits_by_repetition(&1))
-    |> transpose()
+    |> Helpers.transpose()
     |> Enum.map(&Integer.undigits(&1, 2))
     |> Helpers.multiply()
-  end
-
-  def transpose(matrix) do
-    matrix
-    |> Enum.zip()
-    |> Enum.map(&Tuple.to_list(&1))
   end
 
   def sort_bits_by_repetition(numbers) do
@@ -55,7 +49,7 @@ defmodule Day3 do
   def remove_by_bit_criteria(data, index, use_most_common) do
     bit_criteria =
       data
-      |> transpose()
+      |> Helpers.transpose()
       |> Enum.at(index)
       |> sort_bits_by_repetition()
       |> Enum.at(if use_most_common, do: 0, else: 1)
