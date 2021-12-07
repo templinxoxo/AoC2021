@@ -11,8 +11,8 @@ defmodule Day5 do
   end
 
   def vent_points([[x1, y1], [x2, y2]]) do
-    x_range = points_in_between(x1, x2)
-    y_range = points_in_between(y1, y2)
+    x_range = Helpers.points_in_between(x1, x2)
+    y_range = Helpers.points_in_between(y1, y2)
 
     if x_range |> Enum.count() == y_range |> Enum.count() do
       List.duplicate(0, abs(x1 - x2) + 1)
@@ -27,14 +27,6 @@ defmodule Day5 do
         end)
       end)
     end
-  end
-
-  def points_in_between(a1, a2) do
-    positive = a1 < a2
-
-    List.duplicate(0, abs(a1 - a2) + 1)
-    |> Enum.with_index()
-    |> Enum.map(fn {_, i} -> if positive, do: a1 + i, else: a1 - i end)
   end
 
   def part2(data \\ nil) do
