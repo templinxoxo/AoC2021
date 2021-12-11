@@ -197,7 +197,7 @@ defmodule Day9 do
         {next_x, next_y} = next_flow_point(direction, x, y)
         # and assign lowpoint id
         {map, basin_id} = clasiffy_basin_in_point(map, next_x, next_y)
-        {map |> insert_at(x, y, basin_id), basin_id}
+        {map |> Helpers.insert_at(x, y, basin_id), basin_id}
     end
   end
 
@@ -218,17 +218,6 @@ defmodule Day9 do
       :left ->
         {x - 1, y}
     end
-  end
-
-  def insert_at(map, x, y, value) do
-    new_row = insert_at(map |> Enum.at(y), x, value)
-    insert_at(map, y, new_row)
-  end
-
-  def insert_at(row, x, value) do
-    {head, rest} = Enum.split(row, x)
-    {_, tail} = Enum.split(rest, 1)
-    head ++ [value] ++ tail
   end
 
   defp get_data(nil) do
