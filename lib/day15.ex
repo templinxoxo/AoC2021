@@ -2,28 +2,26 @@ defmodule Day15 do
   def part1(data \\ nil) do
     data
     |> get_data()
-    |> find_shortest_path(:down)
-    # |> visualize(
-    #   data
-    #   |> get_data()
-    # )
-    |> elem(0)
+    |> find_shortest_path()
   end
 
   def part2(data \\ nil) do
     data
     |> get_data()
     |> multiply_data()
-    |> find_shortest_path(:down)
-    |> visualize(
-      data
-      |> get_data()
-      |> multiply_data()
-    )
-    |> elem(0)
+    |> find_shortest_path()
   end
 
-  def find_shortest_path(data, direction) do
+  def find_shortest_path(data) do
+    data
+    |> prepare_empty_matrix
+    |> explore_points(:start)
+    |> List.last()
+    |> List.last()
+    |> elem(2)
+  end
+
+  def prepare_empty_matrix(data) do
     height = data |> length
     width = data |> Enum.at(0) |> length
 
@@ -31,70 +29,64 @@ defmodule Day15 do
     |> Enum.map(fn y ->
       0..(width - 1)
       |> Enum.map(fn x ->
-        {:infinity, [], Helpers.value_at(data, x, y)}
+        {:not_visited, Helpers.value_at(data, x, y), :infinity, nil}
       end)
     end)
-    |> explore_points(:start, height, width, direction)
   end
 
-  def explore_points(data, :start, height, width, :down) do
+  def explore_points(init_data, :start) do
     start_point = {0, 0}
-    data = Helpers.insert_at(data, 0, 0, {0, [start_point], 0})
-    points = nearest_points(start_point, height, width, 1)
+    data = Helpers.insert_at(init_data, 0, 0, {:visited, 0, 0, :start})
 
-    explore_points(data, points, height, width, :down)
-    |> List.last()
-    |> List.last()
+    points =
+      points_to_visit({start_point, 0, 0, nil}, data)
+      |> sort()
+
+    explore_points(data, points)
   end
 
-  def explore_points(data, :start, height, width, :up) do
-    start_point = {width - 1, height - 1}
-    data = Helpers.insert_at(data, width - 1, height - 1, {0, [start_point], 0})
-    points = nearest_points(start_point, height, width, -1)
+  def explore_points(init_data, [
+        {{x, y} = coords, val, path_val, parent} = start_point | remaining_points
+      ]) do
+    height = init_data |> length
+    width = init_data |> Enum.at(0) |> length
 
-    explore_points(data, points, height, width, :up)
-    |> Helpers.value_at(0, 0)
-  end
+    data = Helpers.insert_at(init_data, x, y, {:visited, val, path_val, parent})
 
-  def explore_points(init_data, points_to_visit, height, width, direction) do
-    data =
-      points_to_visit
-      |> Enum.reduce(init_data, fn {x, y}, data ->
-        {_, _, current_value} = Helpers.value_at(data, x, y)
+    if coords == {width - 1, height - 1} do
+      data
+    else
+      points =
+        points_to_visit(start_point, data)
+        |> Enum.concat(remaining_points)
+        |> sort()
 
-        shortest_path =
-          {x, y}
-          |> nearest_points(height, width, if(direction == :up, do: 1, else: -1))
-          |> Enum.map(fn {x_p, y_p} ->
-            {path_value, path, _} = Helpers.value_at(data, x_p, y_p)
-            {path_value + current_value, path ++ [{x, y}], current_value}
-          end)
-          |> Enum.min_by(&elem(&1, 0))
-
-        Helpers.insert_at(data, x, y, shortest_path)
-      end)
-
-    next_points_to_visit =
-      nearest_points(points_to_visit, height, width, if(direction == :up, do: -1, else: 1))
-
-    case next_points_to_visit do
-      [] -> data
-      _ -> explore_points(data, next_points_to_visit, height, width, direction)
+      explore_points(data, points)
     end
   end
 
-  def nearest_points(points, height, width, increment) when is_list(points) do
-    points
-    |> Enum.flat_map(fn {x, y} ->
-      [{x + increment, y}, {x, y + increment}]
-    end)
-    |> Enum.uniq()
+  def points_to_visit({{a, b}, _value, path_value, parent}, data) do
+    height = data |> length
+    width = data |> Enum.at(0) |> length
+
+    [{a + 1, b}, {a, b + 1}, {a - 1, b}, {a, b - 1}]
+    # out of bounds
     |> Enum.reject(fn {x, y} -> x >= width or y >= height end)
     |> Enum.reject(fn {x, y} -> x < 0 or y < 0 end)
+    # parent
+    |> Enum.reject(fn point -> point == parent end)
+    # already visited
+    |> Enum.reject(fn {x, y} -> Helpers.value_at(data, x, y) |> elem(0) == :visited end)
+    |> Enum.map(fn {x, y} ->
+      {:not_visited, value, :infinity, nil} = Helpers.value_at(data, x, y)
+      {{x, y}, value, value + path_value, {a, b}}
+    end)
   end
 
-  def nearest_points(point, height, width, increment) do
-    nearest_points([point], height, width, increment)
+  def sort(points) do
+    points
+    |> Enum.sort_by(&elem(&1, 2))
+    |> Enum.uniq_by(&elem(&1, 0))
   end
 
   def multiply_data(data) do
@@ -116,19 +108,6 @@ defmodule Day15 do
         end)
       end)
     end)
-  end
-
-  def visualize({_, path, _} = input, data) do
-    data
-    |> Helpers.matrix_map_with_index(fn p, {x, y} ->
-      case {x, y} in path do
-        true -> p
-        false -> "."
-      end
-    end)
-    |> Enum.map(&(Enum.join(&1, "") |> IO.inspect()))
-
-    input
   end
 
   def get_data(nil) do
