@@ -306,11 +306,12 @@ defmodule Day18Test do
     assert result == expected
   end
 
-  # test "Part 2" do
-  #   part2 =
-  #     test_data()
-  #     |> part2()
+  test "Part 2" do
+    data = test_data()
 
-  #   assert part2 == 112
-  # end
+    expected = 3993
+    result = Day18.part2(data)
+
+    assert result == expected
+  end
 end
